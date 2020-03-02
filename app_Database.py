@@ -23,7 +23,7 @@ G_JSON_Path = ''
 
 
 # Utils
-imgExtns = ['bmp', 'png', 'jpg', 'jpeg']
+
 
 # TKinter Window
 def CreateWindow():
@@ -123,10 +123,14 @@ def SelectFileDialogBox_G_JSON():
 
 def Add2DB():
     global OpenedDirs
+    global C_JSON_Path
+    global G_JSON_Path
 
     if not len(OpenedDirs) == 0:
         MainLabelText_DB.set("Adding Images...")
-        ImageDatabase.AddImagesToDatabase(OpenedDirs, match_mode='avg', G_JSON=G_JSON_Path, C_JSON=C_JSON_Path)
+        match_mode = 'avg'
+        roundRange = 10
+        ImageDatabase.RefreshDatabase(DatabaseLocations=OpenedDirs, G_JSON=G_JSON_Path, C_JSON=C_JSON_Path, match_mode=match_mode, roundRange=roundRange)
         MainLabelText_DB.set("Finished Adding Images")
     else:
         MainLabelText_DB.set("Please select atleast one valid Image file to upload.")
