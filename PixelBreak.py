@@ -189,8 +189,8 @@ def BoundingBox(Image, pos, window_size, radius=1, color=[0, 0, 0]):
         I = BoundingBox(I, [pos[0]+ri, pos[1]+ri], [window_size[0]-(2*ri), window_size[1]-(2*ri)], radius=0, color=color)
     return I
 
-
-
+BoundingBoxRadius = 3
+"""
 # Driver Code
 SubDirName = '_ColorShift'
 G_JSON = 'FillImgs_G' + SubDirName + '.json'
@@ -211,7 +211,6 @@ roundRange = 50
 nextImageMode = 'random'
 
 DisplayIntermiateSteps = False
-BoundingBoxRadius = 3
 # Params
 
 I = None
@@ -237,3 +236,4 @@ plt.show()
 # III = BoundingBox(I, [100, 0], [100, 100], radius=3, color=[0, 0, 0])
 # plt.imshow(III, 'gray')
 # plt.show()
+"""

@@ -217,15 +217,15 @@ def GenerateColorShiftedImage(Image, ExpectedAvgColor):
     return I.astype(np.uint8)
 
 # Driver Code
-DatabaseLocation = 'FillImgs'
+# DatabaseLocation = 'FillImgs'
 
-SubDirChoice = '_test'
-JSONSubDir = ''
+# SubDirChoice = '_test'
+# JSONSubDir = ''
 
-DirChoice = '_ColorShift'
+# DirChoice = '_ColorShift'
 
-roundRange = 50
-match_mode = 'name'
+# roundRange = 50
+# match_mode = 'name'
 
 # RefreshDatabase(DatabaseLocations=[DatabaseLocation + DirChoice + SubDirChoice], G_JSON=DatabaseLocation + '_G' + DirChoice + JSONSubDir + '.json', C_JSON=DatabaseLocation + '_C' + DirChoice + JSONSubDir + '.json', match_mode=match_mode, roundRange=roundRange)
 
@@ -244,4 +244,4 @@ match_mode = 'name'
 # DatabaseLocation='FillImgs_SolidColor' + SubDirChoice, 
 # G_JSON='FillImgs_G_SolidColor' + JSONSubDir + '.json', C_JSON='FillImgs_C_SolidColor' + JSONSubDir + '.json')
 
-RefreshDatabase(DatabaseLocations=[DatabaseLocation + DirChoice + SubDirChoice], G_JSON=DatabaseLocation + '_G' + DirChoice + JSONSubDir + '.json', C_JSON=DatabaseLocation + '_C' + DirChoice + JSONSubDir + '.json', match_mode=match_mode, roundRange=roundRange)
+# RefreshDatabase(DatabaseLocations=[DatabaseLocation + DirChoice + SubDirChoice], G_JSON=DatabaseLocation + '_G' + DirChoice + JSONSubDir + '.json', C_JSON=DatabaseLocation + '_C' + DirChoice + JSONSubDir + '.json', match_mode=match_mode, roundRange=roundRange)
