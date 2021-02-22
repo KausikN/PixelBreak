@@ -19,49 +19,87 @@ def ImageBreak(originalImage, window_size, match_mode, fillImageSize=(100, 100),
     newImage = None
     colorImg = (originalImage.ndim == 3)
     if not colorImg:
-        newImageSize = (fillImageSize[0]*(int(round(originalImage.shape[0] / window_size[0])) + 1),
+        newImageSize = (fillImageSize[0]*(int(round(originalImage.shape[0] / window_size[0])) + 1), 
                         fillImageSize[1]*(int(round(originalImage.shape[1] / window_size[1])) + 1))
+        newImage = np.zeros(newImageSize)
+
+        ni = 0
+        nj = 0
+
+        for i in tqdm(range(0, originalImage.shape[0], window_size[0])):
+            nj = 0
+            for j in range(0, originalImage.shape[1], window_size[1]):
+                if match_mode == 'avg':
+                    AvgPixVal = None
+                    ImageWindowPortion = None
+                    if (i+window_size[0] < originalImage.shape[0] and j+window_size[1] < originalImage.shape[1]):
+                        ImageWindowPortion = originalImage[i:i+window_size[0], j:j+window_size[1]]
+                    else:
+                        ImageWindowPortion = originalImage[i:, j:]
+                    AvgPixVal = AveragePixelValue(ImageWindowPortion)
+                    #print("Matching: ", ni*fillImageSize[0], (ni+1)*fillImageSize[0], nj*fillImageSize[1], (nj+1)*fillImageSize[1])
+                    newImage[ni*fillImageSize[0]:(ni+1)*fillImageSize[0], nj*fillImageSize[1]:(nj+1)*fillImageSize[1]] = ResizeImage(GetMatchingImage(AvgPixVal, match_mode, colorImg, nextImageMode=nextImageMode, roundRange=roundRange), fillImageSize)
+                    zerocheck = np.sum(np.sum(newImage[ni*fillImageSize[0]:(ni+1)*fillImageSize[0], nj*fillImageSize[1]:(nj+1)*fillImageSize[1]], axis=1), axis=0)
+                    if DisplayIntermiateSteps and zerocheck != 0.0:
+                        originalImage_WindowHighlighted = BoundingBox(originalImage, [i, j], window_size, radius=BoundingBoxRadius, color=[50, 50, 50])
+                        axw = plt.subplot(2, 2, 1)
+                        plt.imshow(originalImage_WindowHighlighted, 'gray')
+                        axw.title.set_text('OriginalImg')
+                        axw = plt.subplot(2, 2, 2)
+                        plt.imshow(ImageWindowPortion, 'gray')
+                        axw.title.set_text('WindowPortion')
+                        axp = plt.subplot(2, 2, 3)
+                        plt.imshow(newImage[ni*fillImageSize[0]:(ni+1)*fillImageSize[0], nj*fillImageSize[1]:(nj+1)*fillImageSize[1]], 'gray')
+                        axp.title.set_text('DBImgPortion')
+                        ax = plt.subplot(2, 2, 4)
+                        plt.imshow(newImage, 'gray')
+                        ax.title.set_text('FullSplitImg')
+                        plt.show()
+                        #DisplayIntermiateSteps = (input("Disp: ") == '')
+                nj += 1
+            ni += 1
     else:
+        #fillImageSize = (fillImageSize[0], fillImageSize[1], originalImage.shape[2])
         newImageSize = (fillImageSize[0]*(int(round(originalImage.shape[0] / window_size[0])) + 1), 
                         fillImageSize[1]*(int(round(originalImage.shape[1] / window_size[1])) + 1), 
                         originalImage.shape[2])
-    newImage = np.zeros(newImageSize)
+        newImage = np.zeros(newImageSize)
 
-    ni = 0
-    nj = 0
-
-    for i in tqdm(range(0, originalImage.shape[0], window_size[0])):
+        ni = 0
         nj = 0
-        for j in range(0, originalImage.shape[1], window_size[1]):
-            if match_mode == 'avg':
-                ImageWindowPortion = None
-                if (i+window_size[0] < originalImage.shape[0] and j+window_size[1] < originalImage.shape[1]):
-                    ImageWindowPortion = originalImage[i:i+window_size[0], j:j+window_size[1]]
-                else:
-                    ImageWindowPortion = originalImage[i:, j:]
-                AvgPixVal = AveragePixelValue(ImageWindowPortion)
-                #print("Matching: ", ni*fillImageSize[0], (ni+1)*fillImageSize[0], nj*fillImageSize[1], (nj+1)*fillImageSize[1])
-                newImage[ni*fillImageSize[0]:(ni+1)*fillImageSize[0], nj*fillImageSize[1]:(nj+1)*fillImageSize[1]] = ResizeImage(GetMatchingImage(AvgPixVal, match_mode, colorImg, nextImageMode=nextImageMode, roundRange=roundRange), fillImageSize)
-                zerocheck = np.sum(np.sum(newImage[ni*fillImageSize[0]:(ni+1)*fillImageSize[0], nj*fillImageSize[1]:(nj+1)*fillImageSize[1]], axis=1), axis=0)
-                if DisplayIntermiateSteps and not zerocheck == 0.0:
-                    originalImage_WindowHighlighted = BoundingBox(originalImage, [i, j], window_size, radius=BoundingBoxRadius, color=[50, 50, 50])
-                    axw = plt.subplot(2, 2, 1)
-                    plt.imshow(originalImage_WindowHighlighted, 'gray')
-                    axw.title.set_text('OriginalImg')
-                    axw = plt.subplot(2, 2, 2)
-                    plt.imshow(ImageWindowPortion, 'gray')
-                    axw.title.set_text('WindowPortion')
-                    axp = plt.subplot(2, 2, 3)
-                    plt.imshow(newImage[ni*fillImageSize[0]:(ni+1)*fillImageSize[0], nj*fillImageSize[1]:(nj+1)*fillImageSize[1]], 'gray')
-                    axp.title.set_text('DBImgPortion')
-                    ax = plt.subplot(2, 2, 4)
-                    plt.imshow(newImage, 'gray')
-                    ax.title.set_text('FullSplitImg')
-                    plt.show()
-                    #DisplayIntermiateSteps = (input("Disp: ") == '')
-            nj += 1
-        ni += 1
-        
+
+        for i in tqdm(range(0, originalImage.shape[0], window_size[0])):
+            nj = 0
+            for j in range(0, originalImage.shape[1], window_size[1]):
+                if match_mode == 'avg':
+                    AvgPixVal = None
+                    ImageWindowPortion = None
+                    if (i+window_size[0] < originalImage.shape[0] and j+window_size[1] < originalImage.shape[1]):
+                        ImageWindowPortion = originalImage[i:i+window_size[0], j:j+window_size[1], :]
+                    else:
+                        ImageWindowPortion = originalImage[i:, j:, :]
+                    AvgPixVal = AveragePixelValue(ImageWindowPortion)
+                    #print("Matching: ", ni*fillImageSize[0], (ni+1)*fillImageSize[0], nj*fillImageSize[1], (nj+1)*fillImageSize[1])
+                    newImage[ni*fillImageSize[0]:(ni+1)*fillImageSize[0], nj*fillImageSize[1]:(nj+1)*fillImageSize[1], :] = ResizeImage(GetMatchingImage(AvgPixVal, match_mode, colorImg, nextImageMode=nextImageMode, roundRange=roundRange), fillImageSize)
+                    zerocheck = np.sum(np.sum(newImage[ni*fillImageSize[0]:(ni+1)*fillImageSize[0], nj*fillImageSize[1]:(nj+1)*fillImageSize[1], :], axis=1), axis=0)
+                    if DisplayIntermiateSteps and zerocheck != 0.0:
+                        originalImage_WindowHighlighted = BoundingBox(originalImage, [i, j], window_size, radius=BoundingBoxRadius, color=[0, 0, 0])
+                        axw = plt.subplot(2, 2, 1)
+                        plt.imshow(originalImage_WindowHighlighted)
+                        axw.title.set_text('OriginalImg')
+                        axw = plt.subplot(2, 2, 2)
+                        plt.imshow(ImageWindowPortion)
+                        axw.title.set_text('WindowPortion')
+                        axp = plt.subplot(2, 2, 3)
+                        plt.imshow(newImage[ni*fillImageSize[0]:(ni+1)*fillImageSize[0], nj*fillImageSize[1]:(nj+1)*fillImageSize[1]])
+                        axp.title.set_text('DBImgPortion')
+                        ax = plt.subplot(2, 2, 4)
+                        plt.imshow(newImage)
+                        ax.title.set_text('FullSplitImg')
+                        plt.show()
+                        #DisplayIntermiateSteps = (input("Disp: ") == '')
+                nj += 1
+            ni += 1
     return newImage
 
 
@@ -89,7 +127,7 @@ def GetMatchingImage(MatchVal, match_mode, colorImg, nextImageMode='increment', 
 
     if not colorImg:
         if match_mode in ['avg', 'min', 'max', 'median', 'mode']:
-            ValClass = str(int(MatchVal - (MatchVal % roundRange)))
+            ValClass = str(int(round(MatchVal / roundRange)*roundRange))
             #print("MatchClass:", ValClass, " - Found DBImgs:", len(fillImg_G_dict[ValClass]))
             if len(fillImg_G_dict[ValClass]) > 0:
                 #print("Using ImgIndex:", fillImgIndex_G_dict[ValClass])
@@ -103,8 +141,7 @@ def GetMatchingImage(MatchVal, match_mode, colorImg, nextImageMode='increment', 
                 return np.zeros((1, 1))
     else:
         if match_mode in ['avg', 'min', 'max', 'median', 'mode']:
-            MatchVal = np.array(MatchVal)
-            ValClass = '_'.join(map(str, list(MatchVal - (MatchVal % roundRange))))
+            ValClass = str(int(round(MatchVal[0] / roundRange)*roundRange)) + '_' + str(int(round(MatchVal[1] / roundRange)*roundRange)) + '_' + str(int(round(MatchVal[2] / roundRange)*roundRange))
             #print("MatchClass:", ValClass, " - Found DBImgs:", len(fillImg_C_dict[ValClass]))
             if len(fillImg_C_dict[ValClass]) > 0:
                 #print("Using ImgIndex:", fillImgIndex_C_dict[ValClass])
@@ -115,7 +152,7 @@ def GetMatchingImage(MatchVal, match_mode, colorImg, nextImageMode='increment', 
                     fillImgIndex_C_dict[ValClass] = random.randint(0, len(fillImg_C_dict[ValClass])-1)
                 return cv2.imread(fillImgPath)
             else:
-                return np.zeros((1, 1, len(list(MatchVal))))
+                return np.zeros((1, 1, len(MatchVal)))
 
 def ResizeImage(Image, fillImgSize):
     return cv2.resize(Image, fillImgSize)

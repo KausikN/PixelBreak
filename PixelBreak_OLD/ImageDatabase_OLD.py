@@ -29,7 +29,7 @@ def RefreshDatabase(DatabaseLocations=['FillImgs'], G_JSON='FillImgs_G.json', C_
     #TotalLocs = len(DatabaseLocations)
     print("Refreshing File List...")
     for DatabaseLocation in tqdm(DatabaseLocations):
-        for dirpath, dirnames, filenames in tqdm(os.walk(DatabaseLocation)):
+        for dirpath, dirnames, filenames in os.walk(DatabaseLocation):
             for filename in filenames:
                 imgd = ImageDetails(os.path.join(dirpath, filename), 0.0, [0.0, 0.0, 0.0])
                 Images.append(imgd)
@@ -52,23 +52,22 @@ def UpdateImagesMatchVals(match_mode='avg'):
     for i in tqdm(range(len(Images))):
         if match_mode == 'avg':
             I = cv2.imread(Images[i].path)
+            I_g = cv2.imread(Images[i].path, 0)
+            Images[i].GMatchVal = np.sum(np.sum(I_g, axis=1), axis=0) / (I_g.shape[0]*I_g.shape[1])
             Images[i].CMatchVal = np.sum(np.sum(I, axis=1), axis=0) / (I.shape[0]*I.shape[1])
-            Images[i].GMatchVal = int(np.mean(Images[i].CMatchVal))
         elif match_mode == 'name': # Name is of form Type_SubDirName_000_000_000.png for color
             filename = os.path.splitext(os.path.basename(Images[i].path))[0]
-            Images[i].CMatchVal = np.array(map(int, filename.split('_')[-3:])) 
-            # Images[i].GMatchVal = int(0.2989 * Images[i].CMatchVal[0] + 0.5870 * Images[i].CMatchVal[1] + 0.1140 * Images[i].CMatchVal[2])
-            Images[i].GMatchVal = int(np.mean(Images[i].CMatchVal))
+            Images[i].CMatchVal = list(map(int, filename[-11:].split('_'))) 
+            Images[i].GMatchVal = int(0.2989 * Images[i].CMatchVal[0] + 0.5870 * Images[i].CMatchVal[1] + 0.1140 * Images[i].CMatchVal[2])
     
-def GenerateGreyScaleDict(roundRange=100):
+def GenerateGreyScaleDict(roundRange=200):
     global Images
     G_Dict = {}
     G_Dict['roundrange'] = roundRange
-    print("Generating GrayScale JSON Dictionary...")
-    for i in range(0, 256, roundRange):
+    for i in range(0, 261, roundRange):
         G_Dict[str(i)] = []
-    for img in tqdm(Images):
-        ValClass = str(int(img.GMatchVal - (img.GMatchVal % roundRange)))
+    for img in Images:
+        ValClass = str(int(round(img.GMatchVal / roundRange)*roundRange))
         G_Dict[ValClass].append(img.path)
     return G_Dict
 
@@ -76,11 +75,12 @@ def GenerateColorDict(roundRange=200):
     global Images
     C_Dict = {}
     C_Dict['roundrange'] = roundRange
-    print("Generating Color JSON Dictionary...")
-    for r, g, b in range(0, 256, roundRange), range(0, 256, roundRange), range(0, 256, roundRange):
-        C_Dict['_'.join(map(str, [r, g, b]))] = []
-    for img in tqdm(Images):
-        ValClass = '_'.join(map(str, list(img.CMatchVal - (img.CMatchVal % roundRange))))
+    for r in range(0, 261, roundRange):
+        for g in range(0, 261, roundRange):
+            for b in range(0, 261, roundRange):
+                C_Dict[str(r) + '_' + str(g) + '_' + str(b)] = []
+    for img in Images:
+        ValClass = str(int(round(img.CMatchVal[0] / roundRange)*roundRange)) + '_' + str(int(round(img.CMatchVal[1] / roundRange)*roundRange)) + '_' + str(int(round(img.CMatchVal[2] / roundRange)*roundRange))
         C_Dict[ValClass].append(img.path)
     return C_Dict
 
@@ -107,33 +107,33 @@ def AddImagesToDatabase(paths, match_mode='avg', G_JSON='FillImgs_G.json', C_JSO
     #totfiiles = len(paths)
     print("Adding Images to Database...")
     for path in tqdm(paths):
+    # for path in paths:
         if os.path.exists(path):
             img = ImageDetails(path, 0.0, [0.0, 0.0, 0.0])
 
             if match_mode == 'avg':
                 I = cv2.imread(img.path)
+                I_g = cv2.imread(img.path, 0)
+                img.GMatchVal = np.sum(np.sum(I_g, axis=1), axis=0) / (I_g.shape[0]*I_g.shape[1])
                 img.CMatchVal = np.sum(np.sum(I, axis=1), axis=0) / (I.shape[0]*I.shape[1])
-                img.GMatchVal = int(np.mean(img.CMatchVal))
             elif match_mode == 'name': # Name is of form Type_SubDirName_000_000_000.png for color
                 filename = os.path.splitext(os.path.basename(img.path))[0]
-                img.CMatchVal = np.array(map(int, filename.split('_')[-3:]))
-                # img.GMatchVal = int(0.2989 * img.CMatchVal[0] + 0.5870 * img.CMatchVal[1] + 0.1140 * img.CMatchVal[2])
-                img.GMatchVal = int(np.mean(img.CMatchVal))
-
-            # Check if path already exists in database - Update values or add image
-            imgFound = False
+                img.CMatchVal = list(map(int, filename[-11:].split('_'))) 
+                img.GMatchVal = int(0.2989 * img.CMatchVal[0] + 0.5870 * img.CMatchVal[1] + 0.1140 * img.CMatchVal[2])
+            imgIndex = -1
             for i in range(len(Images)):
                 if Images[i].path == img.path:
-                    imgFound = True
+                    imgIndex = i
                     Images[i].GMatchVal = img.GMatchVal
                     Images[i].CMatchVal = img.CMatchVal
-            if imgFound == False:
+            if imgIndex == -1:
                 Images.append(img)
             
-            ValClassG = str(int(img.GMatchVal - (img.GMatchVal % roundRangeG)))
+            ValClassG = str(int(round(img.GMatchVal / roundRangeG)*roundRangeG))
             G_Dict[ValClassG].append(img.path)
 
-            ValClassC = '_'.join(map(str, list(img.CMatchVal - (img.CMatchVal % roundRangeC))))
+            ValClassC = str(int(round(img.CMatchVal[0] / roundRangeC)*roundRangeC)) + '_' + str(int(round(img.CMatchVal[1] / roundRangeC)*roundRangeC)) + '_' + str(int(round(img.CMatchVal[2] / roundRangeC)*roundRangeC))
+            #print(ValClassC, path)
             C_Dict[ValClassC].append(img.path)
             #progress += 1
             #print("Database Added:", progress, "/", totfiiles)
@@ -142,38 +142,36 @@ def AddImagesToDatabase(paths, match_mode='avg', G_JSON='FillImgs_G.json', C_JSO
 
 def AddSolidColorImagesToDatabase(color_step, n_imgs_per_step, Imgsize=(100, 100, 3), match_mode='avg', DatabaseLocation='FillImgs', G_JSON='FillImgs_G.json', C_JSON='FillImgs_C.json'):
     paths = []
-    if n_imgs_per_step > color_step:
-        n_imgs_per_step = color_step
-
     print("Creating Solid Color Images...")
-    for r, g, b in tqdm(range(color_step, 256, color_step), range(color_step, 256, color_step), range(color_step, 256, color_step)):
-        redVal = np.random.randint(r-color_step, r, n_imgs_per_step)
-        greenVal = np.random.randint(g-color_step, g, n_imgs_per_step)
-        blueVal = np.random.randint(b-color_step, b, n_imgs_per_step)
-        for i in range(n_imgs_per_step):
-            img = GenerateSolidColourImage(Imgsize, (redVal, greenVal, blueVal))
-            filename = 'SolidColor_' + '_'.join(map(str, [redVal[i], greenVal[i], blueVal[i]])) + '.png'
-            if not os.path.exists(os.path.join(DatabaseLocation, filename)):
-                cv2.imwrite(os.path.join(DatabaseLocation, filename), img)
-                paths.append(os.path.join(DatabaseLocation, filename))
-
+    for r in tqdm(range(color_step, 256, color_step)):
+        for g in range(color_step, 256, color_step):
+            for b in range(color_step, 256, color_step):
+                for j in range(n_imgs_per_step):
+                    redVal = random.randint(r-color_step, r)
+                    greenVal = random.randint(g-color_step, g)
+                    blueVal = random.randint(b-color_step, b)
+                    img = GenerateSolidColourImage(Imgsize, (redVal, greenVal, blueVal))
+                    zeropad = [str('0'*(3 - len(str(redVal)))), str('0'*(3 - len(str(greenVal)))), str('0'*(3 - len(str(blueVal))))]
+                    filename = 'SolidColor_' + zeropad[0] + str(redVal) + '_' + zeropad[1] + str(greenVal) + '_' + zeropad[2] + str(blueVal) + '.png'
+                    if not os.path.exists(os.path.join(DatabaseLocation, filename)):
+                        cv2.imwrite(os.path.join(DatabaseLocation, filename), img)
+                        paths.append(os.path.join(DatabaseLocation, filename))
+                #print("Done Creating:","(" + str(r), ",", str(g) + ",", str(b) + ")")
     AddImagesToDatabase(paths, match_mode, G_JSON=G_JSON, C_JSON=C_JSON)
 
 def AddSolidGreyScaleImagesToDatabase(color_step, n_imgs_per_step, Imgsize=(100, 100), match_mode='avg', DatabaseLocation='FillImgs', G_JSON='FillImgs_G.json', C_JSON='FillImgs_C.json'):
     paths = []
-    if n_imgs_per_step > color_step:
-        n_imgs_per_step = color_step
-
     print("Creating GrayScale Images...")
     for g in tqdm(range(color_step, 256, color_step)):
-        gVal = np.random.randint(g-color_step, g, n_imgs_per_step)
         for j in range(n_imgs_per_step):
-            img = GenerateSolidColourImage(Imgsize, gVal[i])
-            filename = 'SolidGreyScale_' + '_'.join(map(str, [gVal[i], gVal[i], gVal[i]])) + '.png'
+            gVal = random.randint(g-color_step, g)
+            img = GenerateSolidColourImage(Imgsize, gVal)
+            zeropad = str('0'*(3 - len(str(gVal))))
+            filename = 'SolidGreyScale_' + zeropad + str(gVal) + '_' + zeropad + str(gVal) + '_' + zeropad + str(gVal) + '.png'
             if not os.path.exists(os.path.join(DatabaseLocation, filename)):
                 cv2.imwrite(os.path.join(DatabaseLocation, filename), img)
                 paths.append(os.path.join(DatabaseLocation, filename))
-
+        #print("Done Creating:", g)
     AddImagesToDatabase(paths, match_mode, G_JSON=G_JSON, C_JSON=C_JSON)
 
 def GenerateSolidColourImage(Imgsize, color):
@@ -182,33 +180,33 @@ def GenerateSolidColourImage(Imgsize, color):
 def AddColorShiftedImagesToDatabase(refImage, color_step, n_imgs_per_step, refImageName='test', Imgsize=(100, 100, 3), match_mode='name', DatabaseLocation='FillImgs_ColorShift', G_JSON='FillImgs_G_ColorShift.json', C_JSON='FillImgs_C_ColorShift.json'):
     paths = []
     print("Creating Color Shifted Images...")
-    for r, g, b in tqdm(range(color_step, 256, color_step), range(color_step, 256, color_step), range(color_step, 256, color_step)):
-        redVal = np.random.randint(r-color_step, r, n_imgs_per_step)
-        greenVal = np.random.randint(g-color_step, g, n_imgs_per_step)
-        blueVal = np.random.randint(b-color_step, b, n_imgs_per_step)
-        for i in range(n_imgs_per_step):
-            AvgColor = [redVal[i], greenVal[i], blueVal[i]]
-            img = GenerateColorShiftedImage(refImage, AvgColor)
-            filename = 'ColorShift_' + refImageName + '_' + '_'.join(map(str, AvgColor)) + '.png'
-            if not os.path.exists(os.path.join(DatabaseLocation, filename)):
-                cv2.imwrite(os.path.join(DatabaseLocation, filename), img)
-                paths.append(os.path.join(DatabaseLocation, filename))
-
+    for r in tqdm(range(color_step, 256, color_step)):
+        for g in range(color_step, 256, color_step):
+            for b in range(color_step, 256, color_step):
+                for j in range(n_imgs_per_step):
+                    AvgColor = [random.randint(r-color_step, r), random.randint(g-color_step, g), random.randint(b-color_step, b)]
+                    img = GenerateColorShiftedImage(refImage, AvgColor)
+                    zeropad = [str('0'*(3 - len(str(AvgColor[0])))), str('0'*(3 - len(str(AvgColor[1])))), str('0'*(3 - len(str(AvgColor[2]))))]
+                    filename = 'ColorShift_' + refImageName + '_' + zeropad[0] + str(AvgColor[0]) + '_' + zeropad[1] + str(AvgColor[1]) + '_' + zeropad[2] + str(AvgColor[2]) + '.png'
+                    if not os.path.exists(os.path.join(DatabaseLocation, filename)):
+                        cv2.imwrite(os.path.join(DatabaseLocation, filename), img)
+                        paths.append(os.path.join(DatabaseLocation, filename))
+                #print("Done Creating:","(" + str(r), ",", str(g) + ",", str(b) + ")")
     AddImagesToDatabase(paths, match_mode, G_JSON=G_JSON, C_JSON=C_JSON)
 
 def AddGreyScaleShiftedImagesToDatabase(refImage, color_step, n_imgs_per_step, refImageName='test', Imgsize=(100, 100), match_mode='avg', DatabaseLocation='FillImgs_ColorShift', G_JSON='FillImgs_G_GreyScaleShift.json', C_JSON='FillImgs_C_GreyScaleShift.json'):
     paths = []
     print("Creating GrayScale Images...")
     for g in tqdm(range(color_step, 256, color_step)):
-        gVal = np.random.randint(g-color_step, g, n_imgs_per_step)
-        for i in range(n_imgs_per_step):
-            AvgScale = gVal[i]
+        for j in range(n_imgs_per_step):
+            AvgScale = random.randint(g-color_step, g)
             img = GenerateColorShiftedImage(refImage, AvgScale)
-            filename = 'GreyScaleShift_' + refImageName + '_' + '_'.join(map(str, AvgScale)) + '.png'
+            zeropad = str('0'*(3 - len(str(AvgScale))))
+            filename = 'GreyScaleShift_' + refImageName + '_' + zeropad + str(AvgScale) + '_' + zeropad + str(AvgScale) + '_' + zeropad + str(AvgScale) + '.png'
             if not os.path.exists(os.path.join(DatabaseLocation, filename)):
                 cv2.imwrite(os.path.join(DatabaseLocation, filename), img)
                 paths.append(os.path.join(DatabaseLocation, filename))
-    
+        #print("Done Creating:", g)
     AddImagesToDatabase(paths, match_mode, G_JSON=G_JSON, C_JSON=C_JSON)
 
 def GenerateColorShiftedImage(Image, ExpectedAvgColor):
