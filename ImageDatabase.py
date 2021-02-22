@@ -63,7 +63,7 @@ def UpdateImagesMatchVals(match_mode='avg'):
 def GenerateGreyScaleDict(roundRange=100):
     global Images
     G_Dict = {}
-    G_Dict['roundrange'] = roundRange
+    G_Dict['roundRange'] = roundRange
     print("Generating GrayScale JSON Dictionary...")
     for i in range(0, 256, roundRange):
         G_Dict[str(i)] = []
@@ -75,7 +75,7 @@ def GenerateGreyScaleDict(roundRange=100):
 def GenerateColorDict(roundRange=200):
     global Images
     C_Dict = {}
-    C_Dict['roundrange'] = roundRange
+    C_Dict['roundRange'] = roundRange
     print("Generating Color JSON Dictionary...")
     for r, g, b in range(0, 256, roundRange), range(0, 256, roundRange), range(0, 256, roundRange):
         C_Dict['_'.join(map(str, [r, g, b]))] = []
@@ -98,11 +98,11 @@ def AddImagesToDatabase(paths, match_mode='avg', G_JSON='FillImgs_G.json', C_JSO
     G_Dict = {}
     with open(G_JSON) as fgr:
         G_Dict = json.load(fgr)
-    roundRangeG = G_Dict['roundrange']
+    roundRangeG = G_Dict['roundRange']
     C_Dict = {}
     with open(C_JSON) as fcr:
         C_Dict = json.load(fcr)
-    roundRangeC = C_Dict['roundrange']
+    roundRangeC = C_Dict['roundRange']
     #progress = 0
     #totfiiles = len(paths)
     print("Adding Images to Database...")

@@ -13,8 +13,9 @@ fillImg_G_dict = {}
 fillImgIndex_G_dict = {}
 fillImg_C_dict = {}
 fillImgIndex_C_dict = {}
+BoundingBoxRadius = 3
 
-def ImageBreak(originalImage, window_size, match_mode, fillImageSize=(100, 100), nextImageMode='increment', roundRange=10, DisplayIntermiateSteps=True):
+def ImageBreak(originalImage, window_size, match_mode, fillImageSize=(100, 100), nextImageMode='increment', DisplayIntermiateSteps=True):
     global BoundingBoxRadius
     newImage = None
     colorImg = (originalImage.ndim == 3)
@@ -25,7 +26,7 @@ def ImageBreak(originalImage, window_size, match_mode, fillImageSize=(100, 100),
         newImageSize = (fillImageSize[0]*(int(round(originalImage.shape[0] / window_size[0])) + 1),
                         fillImageSize[1]*(int(round(originalImage.shape[1] / window_size[1])) + 1),
                         originalImage.shape[2])
-    newImage = np.zeros(newImageSize)
+    newImage = np.zeros(newImageSize, dtype=np.uint8)
 
     ni = 0
     nj = 0
@@ -41,7 +42,7 @@ def ImageBreak(originalImage, window_size, match_mode, fillImageSize=(100, 100),
                     ImageWindowPortion = originalImage[i:, j:]
                 AvgPixVal = AveragePixelValue(ImageWindowPortion)
                 #print("Matching: ", ni*fillImageSize[0], (ni+1)*fillImageSize[0], nj*fillImageSize[1], (nj+1)*fillImageSize[1])
-                newImage[ni*fillImageSize[0]:(ni+1)*fillImageSize[0], nj*fillImageSize[1]:(nj+1)*fillImageSize[1]] = ResizeImage(GetMatchingImage(AvgPixVal, match_mode, colorImg, nextImageMode=nextImageMode, roundRange=roundRange), fillImageSize)
+                newImage[ni*fillImageSize[0]:(ni+1)*fillImageSize[0], nj*fillImageSize[1]:(nj+1)*fillImageSize[1]] = ResizeImage(GetMatchingImage(AvgPixVal, match_mode, colorImg, nextImageMode=nextImageMode), fillImageSize)
                 zerocheck = np.sum(np.sum(newImage[ni*fillImageSize[0]:(ni+1)*fillImageSize[0], nj*fillImageSize[1]:(nj+1)*fillImageSize[1]], axis=1), axis=0)
                 if DisplayIntermiateSteps and not zerocheck == 0.0:
                     originalImage_WindowHighlighted = BoundingBox(originalImage, [i, j], window_size, radius=BoundingBoxRadius, color=[50, 50, 50])
@@ -81,7 +82,7 @@ def LoadFillImagesData(G_JSON='FillImgs_G.json', C_JSON='FillImgs_C.json'):
 
                     
                     
-def GetMatchingImage(MatchVal, match_mode, colorImg, nextImageMode='increment', roundRange=10):
+def GetMatchingImage(MatchVal, match_mode, colorImg, nextImageMode='increment'):
     global fillImg_G_dict
     global fillImgIndex_G_dict
     global fillImg_C_dict
@@ -89,7 +90,7 @@ def GetMatchingImage(MatchVal, match_mode, colorImg, nextImageMode='increment', 
 
     if not colorImg:
         if match_mode in ['avg', 'min', 'max', 'median', 'mode']:
-            ValClass = str(int(MatchVal - (MatchVal % roundRange)))
+            ValClass = str(int(MatchVal - (MatchVal % fillImg_C_dict['roundRange'])))
             #print("MatchClass:", ValClass, " - Found DBImgs:", len(fillImg_G_dict[ValClass]))
             if len(fillImg_G_dict[ValClass]) > 0:
                 #print("Using ImgIndex:", fillImgIndex_G_dict[ValClass])
@@ -104,7 +105,7 @@ def GetMatchingImage(MatchVal, match_mode, colorImg, nextImageMode='increment', 
     else:
         if match_mode in ['avg', 'min', 'max', 'median', 'mode']:
             MatchVal = np.array(MatchVal)
-            ValClass = '_'.join(map(str, list(MatchVal - (MatchVal % roundRange))))
+            ValClass = '_'.join(map(str, list(MatchVal - (MatchVal % fillImg_G_dict['roundRange']))))
             #print("MatchClass:", ValClass, " - Found DBImgs:", len(fillImg_C_dict[ValClass]))
             if len(fillImg_C_dict[ValClass]) > 0:
                 #print("Using ImgIndex:", fillImgIndex_C_dict[ValClass])
@@ -118,6 +119,7 @@ def GetMatchingImage(MatchVal, match_mode, colorImg, nextImageMode='increment', 
                 return np.zeros((1, 1, len(list(MatchVal))))
 
 def ResizeImage(Image, fillImgSize):
+    fillImgSize = tuple(fillImgSize)
     return cv2.resize(Image, fillImgSize)
 
 
@@ -152,13 +154,12 @@ def BoundingBox(Image, pos, window_size, radius=1, color=[0, 0, 0]):
         I = BoundingBox(I, [pos[0]+ri, pos[1]+ri], [window_size[0]-(2*ri), window_size[1]-(2*ri)], radius=0, color=color)
     return I
 
-BoundingBoxRadius = 3
-
 # Driver Code
-# SubDirName = '_ColorShift'
-# G_JSON = 'FillImgs_G' + SubDirName + '.json'
-# C_JSON = 'FillImgs_C' + SubDirName + '.json'
-# LoadFillImagesData(G_JSON=G_JSON, C_JSON=C_JSON)
+
+SubDirName = '_ColorShift'
+G_JSON = 'FillImgs_G' + SubDirName + '.json'
+C_JSON = 'FillImgs_C' + SubDirName + '.json'
+LoadFillImagesData(G_JSON=G_JSON, C_JSON=C_JSON)
 
 # # Params
 # ImagePath = 'TestImgs/FunctionStandardFormat_1.png'
@@ -169,7 +170,6 @@ BoundingBoxRadius = 3
 # window_size = (50, 50)
 # match_mode = 'avg'
 # fillImageSize=(50, 50)
-# roundRange = 50
 # nextImageMode = 'random'
 
 # DisplayIntermiateSteps = False
@@ -185,7 +185,7 @@ BoundingBoxRadius = 3
 # plt.show()
 # print("Input Image Shape:", I.shape)
 
-# splitImage = ImageBreak(I, window_size, match_mode, fillImageSize, nextImageMode=nextImageMode, roundRange=roundRange, DisplayIntermiateSteps=DisplayIntermiateSteps)
+# splitImage = ImageBreak(I, window_size, match_mode, fillImageSize, nextImageMode=nextImageMode, DisplayIntermiateSteps=DisplayIntermiateSteps)
 # cv2.imwrite(splitImgSavePath, splitImage)
 # plt.figure()
 # plt.title('Final Split Image')

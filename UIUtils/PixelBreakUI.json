@@ -1,0 +1,99 @@
+{
+    "WindowTitle": "PixelBreak",
+
+    "code_path": "PixelBreak.py",
+
+    "script_desc": "Tools to reconstruct and image using other images",
+
+    "imports": [
+        "import os",
+        "import cv2",
+        "import PixelBreak",
+        "import matplotlib.pyplot as plt",
+        "from Utils import Utils"
+    ],
+
+    "classes": [
+
+    ],
+
+    "functions": [
+
+    ],
+
+    "script_parameters": [
+        {
+            "name": "imgPath",
+            "value": "'' #TYPE: FILE"
+        },
+        {
+            "name": "imgSize",
+            "value": "None NOTYPE"
+        },
+        {
+            "name": "keepAspectRatio",
+            "value": "False"
+        },
+        {
+            "name": "GreyScale",
+            "value": "False"
+        },
+        {
+            "name": "window_size",
+            "value": "[50, 50] NOTYPE"
+        },
+        {
+            "name": "fillImageSize",
+            "value": "[50, 50] NOTYPE"
+        },
+        {
+            "name": "match_mode",
+            "value": "#TYPE: SELECTVAL avg"
+        },
+        {
+            "name": "nextImageMode",
+            "value": "#TYPE: SELECTVAL increment,random"
+        },
+        {
+            "name": "saveDir",
+            "value": "'' #TYPE: DIR"
+        },
+        {
+            "name": "saveName",
+            "value": "''"
+        },
+        {
+            "name": "DisplayIntermiateSteps",
+            "value": "False"
+        },
+        {
+            "name": "display",
+            "value": "True"
+        },
+        {
+            "name": "save",
+            "value": "False"
+        }
+    ],
+
+    "driver_code": [
+        "savePath = os.path.join(saveDir, saveName)",
+        "# Read Input Image",
+        "I = Utils.ReadImage(imgPath, imgSize, keepAspectRatio)",
+        "if GreyScale:",
+        "    I = cv2.cvtColor(I, cv2.COLOR_RGB2GRAY)",
+
+        "# Get Pixel Break Image",
+        "I_pixbreak = PixelBreak.ImageBreak(I, window_size, match_mode, fillImageSize=fillImageSize, nextImageMode=nextImageMode, DisplayIntermiateSteps=DisplayIntermiateSteps)",
+
+        "if display:",
+        "    plt.subplot(1, 2, 1)",
+        "    plt.imshow(I, 'gray')",
+        "    plt.subplot(1, 2, 2)",
+        "    plt.imshow(I_pixbreak, 'gray')",
+        "    plt.show()",
+
+        "if save:",
+        "    Utils.SaveImage(I_pixbreak, savePath)"
+    ]
+}
