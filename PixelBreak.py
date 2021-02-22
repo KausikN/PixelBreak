@@ -22,8 +22,8 @@ def ImageBreak(originalImage, window_size, match_mode, fillImageSize=(100, 100),
         newImageSize = (fillImageSize[0]*(int(round(originalImage.shape[0] / window_size[0])) + 1),
                         fillImageSize[1]*(int(round(originalImage.shape[1] / window_size[1])) + 1))
     else:
-        newImageSize = (fillImageSize[0]*(int(round(originalImage.shape[0] / window_size[0])) + 1), 
-                        fillImageSize[1]*(int(round(originalImage.shape[1] / window_size[1])) + 1), 
+        newImageSize = (fillImageSize[0]*(int(round(originalImage.shape[0] / window_size[0])) + 1),
+                        fillImageSize[1]*(int(round(originalImage.shape[1] / window_size[1])) + 1),
                         originalImage.shape[2])
     newImage = np.zeros(newImageSize)
 
@@ -153,50 +153,49 @@ def BoundingBox(Image, pos, window_size, radius=1, color=[0, 0, 0]):
     return I
 
 BoundingBoxRadius = 3
-"""
+
 # Driver Code
-SubDirName = '_ColorShift'
-G_JSON = 'FillImgs_G' + SubDirName + '.json'
-C_JSON = 'FillImgs_C' + SubDirName + '.json'
-LoadFillImagesData(G_JSON=G_JSON, C_JSON=C_JSON)
+# SubDirName = '_ColorShift'
+# G_JSON = 'FillImgs_G' + SubDirName + '.json'
+# C_JSON = 'FillImgs_C' + SubDirName + '.json'
+# LoadFillImagesData(G_JSON=G_JSON, C_JSON=C_JSON)
 
-# Params
-splitImgSavePath = 'SplitImage2.png'
+# # Params
+# ImagePath = 'TestImgs/FunctionStandardFormat_1.png'
+# GrayScaleInput = False
 
-ImagePath = 'test.jpg'
+# splitImgSavePath = 'GeneratedImgs/SplitImage3.png'
 
-GrayScaleInput = False
+# window_size = (50, 50)
+# match_mode = 'avg'
+# fillImageSize=(50, 50)
+# roundRange = 50
+# nextImageMode = 'random'
 
-window_size = (10, 10)
-match_mode = 'avg'
-fillImageSize=(10, 10)
-roundRange = 50
-nextImageMode = 'random'
+# DisplayIntermiateSteps = False
+# # Params
 
-DisplayIntermiateSteps = False
-# Params
-
-I = None
-if GrayScaleInput:
-    I = cv2.imread(ImagePath, 0)
-    plt.imshow(I, 'gray')
-else:
-    I = cv2.imread(ImagePath)
-    plt.imshow(cv2.cvtColor(I, cv2.COLOR_BGR2RGB))
-plt.show()
-print("Input Image Shape:", I.shape)
-
-splitImage = ImageBreak(I, window_size, match_mode, fillImageSize, nextImageMode=nextImageMode, roundRange=roundRange, DisplayIntermiateSteps=DisplayIntermiateSteps)
-cv2.imwrite(splitImgSavePath, splitImage)
-plt.figure()
-plt.title('Final Split Image')
-if I.ndim == 2:
-    plt.imshow(splitImage.astype(np.uint8), 'gray')
-elif I.ndim == 3:
-    plt.imshow(splitImage.astype(np.uint8))
-plt.show()
-
-# III = BoundingBox(I, [100, 0], [100, 100], radius=3, color=[0, 0, 0])
-# plt.imshow(III, 'gray')
+# I = None
+# if GrayScaleInput:
+#     I = cv2.imread(ImagePath, 0)
+#     plt.imshow(I, 'gray')
+# else:
+#     I = cv2.imread(ImagePath)
+#     plt.imshow(cv2.cvtColor(I, cv2.COLOR_BGR2RGB))
 # plt.show()
-"""
+# print("Input Image Shape:", I.shape)
+
+# splitImage = ImageBreak(I, window_size, match_mode, fillImageSize, nextImageMode=nextImageMode, roundRange=roundRange, DisplayIntermiateSteps=DisplayIntermiateSteps)
+# cv2.imwrite(splitImgSavePath, splitImage)
+# plt.figure()
+# plt.title('Final Split Image')
+
+# if GrayScaleInput:
+#     plt.imshow(splitImage.astype(np.uint8), 'gray')
+# else:
+#     plt.imshow(cv2.cvtColor(splitImage.astype(np.uint8), cv2.COLOR_BGR2RGB))
+# plt.show()
+
+# # III = BoundingBox(I, [100, 0], [100, 100], radius=3, color=[0, 0, 0])
+# # plt.imshow(III, 'gray')
+# # plt.show()
