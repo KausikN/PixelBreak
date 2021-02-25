@@ -1,0 +1,135 @@
+{
+    "WindowTitle": "ImageDatabase",
+
+    "code_path": "ImageDatabase.py",
+
+    "script_desc": "Organise the image database from which fill Images are takens",
+
+    "imports": [
+        "import os",
+        "import cv2",
+        "import ImageDatabase",
+        "import matplotlib.pyplot as plt",
+        "from Utils import Utils"
+    ],
+
+    "classes": [
+
+    ],
+
+    "functions": [
+
+    ],
+
+    "script_parameters": [
+        {
+            "name": "JSONDir",
+            "value": "'' #TYPE: DIR"
+        },
+        {
+            "name": "ColorJSONName",
+            "value": "'' #TYPE: FILE"
+        },
+        {
+            "name": "GreyJSONName",
+            "value": "'' #TYPE: FILE"
+        },
+
+        
+
+        {
+            "name": "MainFunctions",
+            "value": "#TYPE: SELECTVAL Nothing,RefreshDB,AddImages2DB"
+        },
+        {
+            "name": "DatabaseLocation",
+            "value": "'' #TYPE: DIR"
+        },
+        {
+            "name": "roundRange",
+            "value": "50"
+        },
+
+
+
+        {
+            "name": "AdditionalFunctions",
+            "value": "#TYPE: SELECTVAL Nothing,AddSolidColorImages,AddColorShiftedImages"
+        },
+        {
+            "name": "GreyScale",
+            "value": "False"
+        },
+        {
+            "name": "ReferenceImage",
+            "value": "'' #TYPE: FILE"
+        },
+        {
+            "name": "imgSize",
+            "value": "None NOTYPE"
+        },
+        {
+            "name": "keepAspectRatio",
+            "value": "False"
+        },
+        {
+            "name": "SaveImgSize",
+            "value": "None NOTYPE"
+        },
+        {
+            "name": "color_step",
+            "value": "50"
+        },
+        {
+            "name": "n_per_step",
+            "value": "2"
+        }
+    ],
+
+    "driver_code": [
+        "json_C_Path = os.path.join(JSONDir, ColorJSONName)",
+        "json_G_Path = os.path.join(JSONDir, GreyJSONName)",
+
+        "AddSolidFunc = ImageDatabase.AddSolidColorImagesToDatabase",
+        "if GreyScale:",
+        "    AddSolidFunc = ImageDatabase.AddSolidGreyScaleImagesToDatabase",
+
+        "AddShifedFunc = ImageDatabase.AddColorShiftedImagesToDatabase",
+        "if GreyScale:",
+        "    AddShifedFunc = ImageDatabase.AddGreyScaleShiftedImagesToDatabase",
+
+
+        "# Add Solid Color Images to Database",
+        "if AdditionalFunctions == 'AddSolidColorImages':",
+        "    if GreyScale:",
+        "        I_ref = cv2.cvtColor(I, cv2.COLOR_RGB2GRAY)",
+        "        SaveImgSize = [SaveImgSize[0], SaveImgSize[1]]",
+        "    else:",
+        "        SaveImgSize = [SaveImgSize[0], SaveImgSize[1], 3]",
+        "    AddSolidFunc(color_step, n_per_step, Imgsize=tuple(SaveImgSize), match_mode='avg', DatabaseLocation=DatabaseLocation, G_JSON=json_G_Path, C_JSON=json_C_Path)",
+
+        "# Add Color Shifted Images to Database",
+        "if AdditionalFunctions == 'AddColorShiftedImages':",
+        "    # Read Reference Image",
+        "    I_ref = Utils.ReadImage(ReferenceImage, imgSize, keepAspectRatio)",
+        "    if SaveImgSize is None:",
+        "        SaveImgSize = I_ref.shape",
+        "    if GreyScale:",
+        "        I_ref = cv2.cvtColor(I, cv2.COLOR_RGB2GRAY)",
+        "        SaveImgSize = [SaveImgSize[0], SaveImgSize[1]]",
+        "    else:",
+        "        SaveImgSize = [SaveImgSize[0], SaveImgSize[1], 3]",
+        "    refImageName = os.path.splitext(os.path.basename(ReferenceImage))[0]",
+        "    AddShifedFunc(I_ref, color_step, n_per_step, refImageName=refImageName, Imgsize=tuple(SaveImgSize), match_mode='avg', DatabaseLocation=DatabaseLocation, G_JSON=json_G_Path, C_JSON=json_C_Path)",
+
+
+        "# Refresh Database",
+        "if MainFunctions == 'RefreshDB':",
+        "    ImageDatabase.RefreshDatabase(DatabaseLocations=[DatabaseLocation], G_JSON=json_G_Path, C_JSON=json_C_Path, match_mode='avg', roundRange=roundRange)",
+        "elif MainFunctions == 'AddImages2DB':",
+        "    paths = []",
+        "    for p in os.listdir(DatabaseLocation):",
+        "        paths.append(os.path.join(DatabaseLocation, p))",
+        "    ImageDatabase.AddImagesToDatabase(paths, match_mode='avg', G_JSON=json_G_Path, C_JSON=json_C_Path)"
+    ]
+}
