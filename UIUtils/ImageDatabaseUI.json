@@ -23,15 +23,11 @@
 
     "script_parameters": [
         {
-            "name": "JSONDir",
-            "value": "'' #TYPE: DIR"
-        },
-        {
-            "name": "ColorJSONName",
+            "name": "ColorJSONPath",
             "value": "'' #TYPE: FILE"
         },
         {
-            "name": "GreyJSONName",
+            "name": "GreyJSONPath",
             "value": "'' #TYPE: FILE"
         },
 
@@ -87,8 +83,8 @@
     ],
 
     "driver_code": [
-        "json_C_Path = os.path.join(JSONDir, ColorJSONName)",
-        "json_G_Path = os.path.join(JSONDir, GreyJSONName)",
+        "json_C_Path = ColorJSONPath",
+        "json_G_Path = GreyJSONPath",
 
         "AddSolidFunc = ImageDatabase.AddSolidColorImagesToDatabase",
         "if GreyScale:",
